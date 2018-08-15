@@ -7,19 +7,13 @@ const {credentials} = require('./config/keys')
 const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
 const TOKEN_PATH = 'token.json';
 
-// Load client secrets from a local file.
-async function ListEvents() {
-  let auth = await authorize(credentials)
-  let events = await listEvents(auth)
-  return events
-}
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
  * given callback function.
  * @param {Object} credentials The authorization client credentials.
  * @param {function} callback The callback to call with the authorized client.
  */
-function authorize(credentials, callback) {
+function authorize(credentials) {
   const {client_secret, client_id, redirect_uris} = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
       client_id, client_secret, redirect_uris[0]);
@@ -81,7 +75,7 @@ function listEvents(auth) {
           }, (err, res) => {
           if (err) reject('The API returned an error: ' + err)
           const events = res.data.items;
-          
+
           if (events.length) {
             let eventString = 'Upcoming 10 events: '
             events.map((event, i) => {
@@ -99,5 +93,7 @@ function listEvents(auth) {
 }
 
 module.exports = {
-  ListEvents
+  authorize,
+  credentials,
+  listEvents
 }
