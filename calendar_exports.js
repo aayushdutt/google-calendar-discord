@@ -1,3 +1,5 @@
+var convertTime = require('convert-time')
+
 // Load client secrets from a local file.
 const {authorize, listEvents, credentials, createEvent} = require('./calendar.js') 
 
@@ -19,17 +21,43 @@ async function CreateEvent() {
     return createdEvent
 }
 
-CreateEvent()
-.then( res => console.log(res))
-.catch(err => console.log(err))
+async function handleCreateEvent(contents) {
+    eventObject = {
+        date: "",
+        time: "",
+        endtime: "",
+        name: ""
+    }
 
-// ListEvents()
-// .then(res => console.log(res))
-// .catch(err => console.log(err))
+    contents.forEach(string => {      
+        if(string.startsWith("name:")) {
+            eventObject.name = string.substring(5);
+        }
 
+        if(string.startsWith("date:")) {
+            eventObject.date = string.substring(5);
+        }
 
+        if(string.startsWith("time:")) {
+            let timePM = string.substring(5);
+            let timeConverted = convertTime(timePM)
+            eventObject.time = timeConverted
+        }
+
+        if(string.startsWith("endtime:")) {
+            let timePM = string.substring(8);
+            let timeConverted = convertTime(timePM)
+            eventObject.time = timeConverted
+        }
+        
+        return
+    });
+
+    console.log(JSON.stringify(eventObject))
+}
 
 module.exports = {
     ListEvents,
-    CreateEvent
+    CreateEvent,
+    handleCreateEvent
 }

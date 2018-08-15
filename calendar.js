@@ -77,7 +77,7 @@ function listEvents(auth) {
           const events = res.data.items;
 
           if (events.length) {
-            let eventString = 'Upcoming 10 events: '
+            let eventString = 'Upcoming 10 events: \n'
             events.map((event, i) => {
               const start = event.start.dateTime || event.start.date;
               eventString+=`\n${start} - ${event.summary}`
