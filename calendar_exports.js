@@ -13,11 +13,11 @@ async function ListEvents() {
     return events
 }
 
-async function CreateEvent() {
+async function CreateEvent(event) {
     if(!auth) {
         auth = await authorize(credentials)
     }
-    let createdEvent = await createEvent(auth)
+    let createdEvent = await createEvent(auth, event)
     return createdEvent
 }
 
@@ -60,7 +60,8 @@ async function handleCreateEvent(contents) {
     let endDate = new Date(dateSplitted[2], dateSplitted[1] - 1, dateSplitted[0], endTimeSplitted[0], endTimeSplitted[1])
 
     let eventDetails = {
-        sumarry: eventObject.name,
+        description: eventObject.name,
+        summary: eventObject.name,
         start: {
             dateTime: startDate
         },
@@ -68,6 +69,8 @@ async function handleCreateEvent(contents) {
             dateTime: endDate
         }
     }
+
+    return await CreateEvent(eventDetails)
 
 }
 
