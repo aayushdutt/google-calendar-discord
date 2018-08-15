@@ -5,23 +5,42 @@ const {authorize, listEvents, credentials, createEvent} = require('./calendar.js
 
 let auth;
 
-async function ListEvents() {
+async function ListEvents(messageObj) {
+    messageObj.channel.send("Ok listing the details")
     if(!auth) {
-        auth = await authorize(credentials)
+        try {
+            auth = await authorize(credentials, messageObj)
+        } catch(e) {
+            return e;
+        }
+      } //auth complete
+    
+    try {
+        // get events with authToken
+       return await listEvents(auth)   
+    } catch(e) {
+        return e;
     }
-    let events = await listEvents(auth)   
-    return events
 }
 
-async function CreateEvent(event) {
+async function CreateEvent(event, messageObj) {
+    messageObj.channel.send("Creating Event...")
     if(!auth) {
-        auth = await authorize(credentials)
+        try {
+            auth = await authorize(credentials, messageObj)
+        } catch(e) {
+            return e;
+        }
+    } //auth complete
+
+    try {
+        return await createEvent(auth, event)
+    } catch(e) {
+        return e
     }
-    let createdEvent = await createEvent(auth, event)
-    return createdEvent
 }
 
-async function handleCreateEvent(contents) {
+async function handleCreateEvent(contents, messageObj) {
     eventObject = {
         date: "",
         time: "",
@@ -70,8 +89,11 @@ async function handleCreateEvent(contents) {
         }
     }
 
-    return await CreateEvent(eventDetails)
-
+    try {
+        return await CreateEvent(eventDetails, messageObj)
+    } catch (e){
+        return e
+    }
 }
 
 module.exports = {

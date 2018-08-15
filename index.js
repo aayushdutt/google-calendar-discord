@@ -11,24 +11,26 @@ client.on('ready', () => {
 
 //Check bot ping
 client.on('message', async message => {
-  if (message.content === '!ping') {
-    message.channel.send("pong");
-  }
+    if (message.content === '!ping') {
+      message.channel.send("pong");
+    }
 
-// List events
-  if (message.content === '!list-events') {
-    let events = await ListEvents()
-    message.channel.send(events);
-  }
+  // List events
+    if (message.content === '!list-events') {
+      let events = await ListEvents(message)
+      message.channel.send(events);
+    }
 
-// Create new event
-  if (message.content.startsWith('!create-event')) {
-    let contents = message.content.split(" ");
-    console.log(contents)
-    let eventLink = await handleCreateEvent(contents)
-    // let newEvent = await CreateEvent()
-    message.channel.send(eventLink);
-  }
+  // Create new event
+    if (message.content.startsWith('!create-event')) {
+      let contents = message.content.split(" ");    
+      try {
+        var eventLink =  await handleCreateEvent(contents, message)
+      } catch (e) {
+        var eventLink = e;
+      }
+      message.channel.send(eventLink);
+    }
 
 });
 

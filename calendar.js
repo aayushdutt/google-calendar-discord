@@ -13,18 +13,32 @@ const TOKEN_PATH = 'token.json';
  * @param {Object} credentials The authorization client credentials.
  * @param {function} callback The callback to call with the authorized client.
  */
-function authorize(credentials) {
-  const {client_secret, client_id, redirect_uris} = credentials.installed;
-  const oAuth2Client = new google.auth.OAuth2(
-      client_id, client_secret, redirect_uris[0]);
+async function authorize(credentials, messageObj) {
+    const {client_secret, client_id, redirect_uris} = credentials.installed;
+    const oAuth2Client = new google.auth.OAuth2(
+        client_id, client_secret, redirect_uris[0]);
   
     // Check if we have previously stored a token.
     return new Promise((resolve, reject) => {
-        fs.readFile(TOKEN_PATH, (err, token) => {
-        if (err) return getAccessToken(oAuth2Client, reject());
-        oAuth2Client.setCredentials(JSON.parse(token));
-        resolve(oAuth2Client);
-        })  
+        fs.readFile(TOKEN_PATH, async (err, token) => {
+          if (err) {
+          // if token not present
+            try {
+              // get a new token
+              let accessToken = await getAccessToken(oAuth2Client, messageObj, reject);              
+              resolve(accessToken)
+            }
+            catch (e) {
+              reject(e)
+            }            
+          }
+
+          else {
+            // else if token is present
+            oAuth2Client.setCredentials(JSON.parse(token));
+            resolve(oAuth2Client);
+          }
+        })
     })
 }
 
@@ -34,29 +48,36 @@ function authorize(credentials) {
  * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
  * @param {getEventsCallback} callback The callback for the authorized client.
  */
-function getAccessToken(oAuth2Client, callback) {
+async function getAccessToken(oAuth2Client, messageObj, reject) {
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
   });
-  console.log('Authorize this app by visiting this url:', authUrl);
+
+  messageObj.channel.send(`Authorize the app by visiting the url ${authUrl}`)
+
+  // console.log('Authorize this app by visiting this url:', authUrl);
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
-  rl.question('Enter the code from that page here: ', (code) => {
-    rl.close();
-    oAuth2Client.getToken(code, (err, token) => {
-      if (err) return console.error('Error retrieving access token', err);
-      oAuth2Client.setCredentials(token);
-      // Store the token to disk for later program executions
-      fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
-        if (err) console.error(err);
-        console.log('Token stored to', TOKEN_PATH);
-      });
-      callback(oAuth2Client);
-    });
-  });
+
+      return new Promise((resolve, reject) => {
+        rl.question('Enter the code from that page here: ', (code) => {
+          rl.close();
+          oAuth2Client.getToken(code, (err, token) => {
+            if (err) reject(err)
+            // Store the token to disk for later program executions
+            fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
+              if (err) console.error(err);
+              console.log('Token stored to', TOKEN_PATH);
+            });
+            // callback(oAuth2Client);
+            resolve(oAuth2Client)
+          });
+        });
+      })
+ 
 }
 
 /**
@@ -80,7 +101,7 @@ function listEvents(auth) {
             let eventString = 'Upcoming 10 events: \n'
             events.map((event, i) => {
               const start = event.start.dateTime || event.start.date;
-              eventString+=`\n${start} - ${event.summary}`
+              eventString+=`\n${event.summary} - ${start}        (id: ${event.id})`
             });
             resolve(eventString)
           } 
@@ -122,6 +143,7 @@ function createEvent(auth, event){
     return new Promise((resolve, reject) => {
       calendar.events.insert({
         auth: auth,
+        // calendarId: 'ip28duj8qb5bhbeoh5ceol59f0@group.calendar.google.com',
         calendarId: 'primary',
         resource: event,
       }, function(err, newEvent) {
