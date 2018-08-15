@@ -41,19 +41,34 @@ async function handleCreateEvent(contents) {
         if(string.startsWith("time:")) {
             let timePM = string.substring(5);
             let timeConverted = convertTime(timePM)
+
             eventObject.time = timeConverted
         }
 
         if(string.startsWith("endtime:")) {
             let timePM = string.substring(8);
             let timeConverted = convertTime(timePM)
-            eventObject.time = timeConverted
+            
+            eventObject.endtime = timeConverted
         }
-        
-        return
     });
+    let dateSplitted = eventObject.date.split('/')
+    let startTimeSplitted = eventObject.time.split(':')
+    let endTimeSplitted = eventObject.endtime.split(':')
+    
+    let startDate = new Date(dateSplitted[2], dateSplitted[1] - 1, dateSplitted[0], startTimeSplitted[0], startTimeSplitted[1])
+    let endDate = new Date(dateSplitted[2], dateSplitted[1] - 1, dateSplitted[0], endTimeSplitted[0], endTimeSplitted[1])
 
-    console.log(JSON.stringify(eventObject))
+    let eventDetails = {
+        sumarry: eventObject.name,
+        start: {
+            dateTime: startDate
+        },
+        end: {
+            dateTime: endDate
+        }
+    }
+
 }
 
 module.exports = {
