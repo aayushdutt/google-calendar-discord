@@ -1,12 +1,12 @@
 var convertTime = require('convert-time')
 
 // Load client secrets from a local file.
-const {authorize, listEvents, credentials, createEvent} = require('./calendar.js') 
+const {authorize, listEvents, credentials, createEvent, deleteEvent} = require('./calendar.js') 
 
 let auth;
 
 async function ListEvents(messageObj) {
-    messageObj.channel.send("Ok listing the details")
+    messageObj.channel.send("Ok listing the details...")
     if(!auth) {
         try {
             auth = await authorize(credentials, messageObj)
@@ -96,8 +96,23 @@ async function handleCreateEvent(contents, messageObj) {
     }
 }
 
+async function DeleteEvent(content, messageObj) {
+    messageObj.channel.send("Removing Event...")
+    if(!auth) {
+        try {
+            auth = await authorize(credentials, messageObj)
+        } catch(e) {
+            return e;
+        }
+    } //auth complete
+
+    let splittedContent = content.split(" ")
+    return await deleteEvent(auth, splittedContent[1])
+}
+
 module.exports = {
     ListEvents,
     CreateEvent,
-    handleCreateEvent
+    handleCreateEvent,
+    DeleteEvent
 }

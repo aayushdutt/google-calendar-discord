@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const config = require('./config/keys.js')
-const {ListEvents, handleCreateEvent} = require('./calendar_exports.js')
+const {ListEvents, handleCreateEvent, DeleteEvent} = require('./calendar_exports.js')
 
 
 
@@ -30,6 +30,12 @@ client.on('message', async message => {
         var eventLink = e;
       }
       message.channel.send(eventLink);
+    }
+
+  // Delete event
+    if (message.content.startsWith('!remove-event' || '!delete-event')) {
+      let deleteMessage = await DeleteEvent(message.content, message)
+      message.channel.send(deleteMessage);
     }
 
 });

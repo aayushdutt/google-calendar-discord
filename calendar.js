@@ -106,7 +106,7 @@ function listEvents(auth) {
             resolve(eventString)
           } 
           else {
-            resolve("No event found")
+            resolve("No upcoming event found")
           }
       });
     }
@@ -158,6 +158,25 @@ function createEvent(auth, event){
 }
 
 
+function deleteEvent(auth, id){
+  const calendar = google.calendar({version: 'v3', auth});
+
+    return new Promise((resolve, reject) => {
+      calendar.events.delete({
+        // calendarId: 'ip28duj8qb5bhbeoh5ceol59f0@group.calendar.google.com',
+        calendarId: 'primary',
+        eventId: id
+      }, function(err) {
+        if (err) {
+          reject(`There was an error contacting the Calendar service: ${err}`)
+        }
+        resolve(`Event deleted`);
+      });
+    }
+  )
+    
+}
+
 
 
 
@@ -171,5 +190,6 @@ module.exports = {
   authorize,
   credentials,
   listEvents,
-  createEvent
+  createEvent,
+  deleteEvent
 }
