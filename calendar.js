@@ -4,7 +4,7 @@ const {google} = require('googleapis');
 const {credentials} = require('./config/keys')
 
 // If modifying these scopes, delete token.json.
-const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 const TOKEN_PATH = 'token.json';
 
 /**
@@ -92,8 +92,62 @@ function listEvents(auth) {
   )
 }
 
+function createEvent(auth){
+  const calendar = google.calendar({version: 'v3', auth});
+    var event = {
+      'summary': 'Google I/O 2015',
+      'location': '800 Howard St., San Francisco, CA 94103',
+      'description': 'A chance to hear more about Google\'s developer products.',
+      'start': {
+        'dateTime': '2018-08-28T09:00:00-07:00',
+        'timeZone': 'America/Los_Angeles',
+      },
+      'end': {
+        'dateTime': '2018-08-28T17:00:00-07:00',
+        'timeZone': 'America/Los_Angeles',
+      },
+      'attendees': [
+        {'email': 'lpage@example.com'},
+        {'email': 'sbrin@example.com'},
+      ],
+      'reminders': {
+        'useDefault': false,
+        'overrides': [
+          {'method': 'email', 'minutes': 24 * 60},
+          {'method': 'popup', 'minutes': 10},
+        ],
+      },
+    };
+
+    return new Promise((resolve, reject) => {
+      calendar.events.insert({
+        auth: auth,
+        calendarId: 'primary',
+        resource: event,
+      }, function(err, newEvent) {
+        if (err) {
+          reject(`There was an error contacting the Calendar service: ${err}`)
+        }
+        resolve(`Event created: ${newEvent.data.htmlLink}`);
+      });
+    }
+  )
+    
+}
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
   authorize,
   credentials,
-  listEvents
+  listEvents,
+  createEvent
 }
