@@ -107,7 +107,11 @@ async function DeleteEvent(content, messageObj) {
     } //auth complete
 
     let splittedContent = content.split(" ")
-    return await deleteEvent(auth, splittedContent[1])
+    try {
+        return await deleteEvent(auth, splittedContent[1])
+    } catch(e) {
+        return e
+    }
 }
 
 module.exports = {
