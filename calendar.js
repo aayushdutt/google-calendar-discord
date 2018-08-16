@@ -1,7 +1,9 @@
 const fs = require('fs');
 const readline = require('readline');
 const {google} = require('googleapis');
-const {credentials} = require('./config/keys')
+const {credentials, calendarId} = require('./config/keys')
+
+if(!calendarId) calendarId = "primary"
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
@@ -25,12 +27,13 @@ async function authorize(credentials, messageObj) {
           // if token not present
             try {
               // get a new token
-              let accessToken = await getAccessToken(oAuth2Client, messageObj, reject);              
-              resolve(accessToken)
+              let accessToken = await getAccessToken(oAuth2Client, messageObj, reject);
+              oAuth2Client.setCredentials(JSON.parse(accessToken));
+              resolve(oAuth2Client);
             }
             catch (e) {
               reject(e)
-            }            
+            }
           }
 
           else {
@@ -73,7 +76,7 @@ async function getAccessToken(oAuth2Client, messageObj, reject) {
               console.log('Token stored to', TOKEN_PATH);
             });
             // callback(oAuth2Client);
-            resolve(oAuth2Client)
+            resolve(token)
           });
         });
       })
@@ -88,7 +91,8 @@ function listEvents(auth) {
   const calendar = google.calendar({version: 'v3', auth});
   return new Promise((resolve, reject) => {
       calendar.events.list({
-          calendarId: 'primary',
+          // calendarId: 'primary',          
+          calendarId,
           timeMin: (new Date()).toISOString(),
           maxResults: 10,
           singleEvents: true,
@@ -101,7 +105,7 @@ function listEvents(auth) {
             let eventString = 'Upcoming 10 events: \n'
             events.map((event, i) => {
               const start = event.start.dateTime || event.start.date;
-              eventString+=`\n${event.summary} - ${start}        (id: ${event.id})`
+              eventString+=`\n${i+1}. ${event.summary} - ${start}        (id: ${event.id})`
             });
             resolve(eventString)
           } 
@@ -115,36 +119,12 @@ function listEvents(auth) {
 
 function createEvent(auth, event){
   const calendar = google.calendar({version: 'v3', auth});
-    // var event = {
-    //   'summary': 'Google I/O 2015',
-    //   'location': '800 Howard St., San Francisco, CA 94103',
-    //   'description': 'A chance to hear more about Google\'s developer products.',
-    //   'start': {
-    //     'dateTime': '2018-08-28T09:00:00-07:00',
-    //     'timeZone': 'America/Los_Angeles',
-    //   },
-    //   'end': {
-    //     'dateTime': '2018-08-28T17:00:00-07:00',
-    //     'timeZone': 'America/Los_Angeles',
-    //   },
-    //   'attendees': [
-    //     {'email': 'lpage@example.com'},
-    //     {'email': 'sbrin@example.com'},
-    //   ],
-    //   'reminders': {
-    //     'useDefault': false,
-    //     'overrides': [
-    //       {'method': 'email', 'minutes': 24 * 60},
-    //       {'method': 'popup', 'minutes': 10},
-    //     ],
-    //   },
-    // };
-
+    
     return new Promise((resolve, reject) => {
       calendar.events.insert({
         auth: auth,
-        // calendarId: 'ip28duj8qb5bhbeoh5ceol59f0@group.calendar.google.com',
-        calendarId: 'primary',
+        calendarId,
+        // calendarId: 'primary',
         resource: event,
       }, function(err, newEvent) {
         if (err) {
@@ -163,8 +143,8 @@ function deleteEvent(auth, id){
 
     return new Promise((resolve, reject) => {
       calendar.events.delete({
-        // calendarId: 'ip28duj8qb5bhbeoh5ceol59f0@group.calendar.google.com',
-        calendarId: 'primary',
+        calendarId,
+        // calendarId: 'primary',
         eventId: id
       }, function(err) {
         if (err) {

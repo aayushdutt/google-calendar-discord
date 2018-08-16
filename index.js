@@ -9,8 +9,8 @@ client.on('ready', () => {
     console.log('Ready!');
 });
 
-//Check bot ping
 client.on('message', async message => {
+  //Check bot ping
     if (message.content === '!ping') {
       message.channel.send("pong");
     }
