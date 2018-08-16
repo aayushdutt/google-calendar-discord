@@ -1,8 +1,7 @@
 module.exports = {
-  "prefix": "!",
   "token": "",
-  calendarId: "",
-  credentials: {
+  "calendarId": "",
+  "credentials": {
     "installed": {
       "client_id": "",
       "project_id": "",

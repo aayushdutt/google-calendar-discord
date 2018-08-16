@@ -25,15 +25,8 @@ async function authorize(credentials, messageObj) {
         fs.readFile(TOKEN_PATH, async (err, token) => {
           if (err) {
           // if token not present
-            try {
-              // get a new token
-              let accessToken = await getAccessToken(oAuth2Client, messageObj, reject);
-              oAuth2Client.setCredentials(JSON.parse(accessToken));
-              resolve(oAuth2Client);
-            }
-            catch (e) {
-              reject(e)
-            }
+              // generate Auth URL
+              getAccessUrl(oAuth2Client, messageObj)
           }
 
           else {
@@ -51,36 +44,35 @@ async function authorize(credentials, messageObj) {
  * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
  * @param {getEventsCallback} callback The callback for the authorized client.
  */
-async function getAccessToken(oAuth2Client, messageObj, reject) {
+async function getAccessUrl(oAuth2Client, messageObj) {
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
   });
 
-  messageObj.channel.send(`Authorize the app by visiting the url ${authUrl}`)
+  messageObj.channel.send(`Authorize the app by visiting the url ${authUrl}\n Reply with [!token-key (yourTokenKye)] to authenticate`)
+  return
+}
 
-  // console.log('Authorize this app by visiting this url:', authUrl);
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
 
-      return new Promise((resolve, reject) => {
-        rl.question('Enter the code from that page here: ', (code) => {
-          rl.close();
-          oAuth2Client.getToken(code, (err, token) => {
-            if (err) reject(err)
-            // Store the token to disk for later program executions
-            fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
-              if (err) console.error(err);
-              console.log('Token stored to', TOKEN_PATH);
-            });
-            // callback(oAuth2Client);
-            resolve(token)
-          });
+async function getAccessToken(code) {
+  const {client_secret, client_id, redirect_uris} = credentials.installed;
+  const oAuth2Client = new google.auth.OAuth2(
+      client_id, client_secret, redirect_uris[0]);
+
+  return new Promise((resolve, reject) => {
+      oAuth2Client.getToken(code, (err, token) => {
+        if (err) reject(err)
+        if (token===null) reject("Bad token key.")
+        // Store the token to disk for later program executions
+        fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
+          if (err) reject(err)
+          console.log('Token stored to', TOKEN_PATH);
         });
-      })
- 
+        resolve("Authenticated.")
+      });
+    });
+  
 }
 
 /**
@@ -171,5 +163,6 @@ module.exports = {
   credentials,
   listEvents,
   createEvent,
-  deleteEvent
+  deleteEvent,
+  getAccessToken
 }

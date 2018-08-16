@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const config = require('./config/keys.js')
-const {ListEvents, handleCreateEvent, DeleteEvent} = require('./calendar_exports.js')
+const {ListEvents, handleCreateEvent, DeleteEvent, handleTokenKey} = require('./calendar_exports.js')
 
 
 
@@ -12,7 +12,7 @@ client.on('ready', () => {
 client.on('message', async message => {
   //Check bot ping
     if (message.content === '!ping') {
-      message.channel.send("pong");
+      message.reply("pong");
     }
 
   // List events
@@ -36,6 +36,18 @@ client.on('message', async message => {
     if (message.content.startsWith('!remove-event' || '!delete-event')) {
       let deleteMessage = await DeleteEvent(message.content, message)
       message.channel.send(deleteMessage);
+    }
+
+  // Accept Token Key
+    if(message.content.startsWith('!token-key')) {
+      if(client.user.lastMessage && client.user.lastMessage.content.startsWith("Authorize the app by visiting the url ") && !client.user.lastMessage.content.startsWith("Authenticated")){
+        const tokenKey = message.content.split(" ")[1]
+        let authMessage = await handleTokenKey(tokenKey, message);
+        message.channel.send(authMessage)
+      }
+      else {
+        message.channel.send("Nope...")
+      }
     }
 
 });

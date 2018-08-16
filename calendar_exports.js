@@ -1,7 +1,7 @@
 var convertTime = require('convert-time')
 
 // Load client secrets from a local file.
-const {authorize, listEvents, credentials, createEvent, deleteEvent} = require('./calendar.js') 
+const {authorize, listEvents, credentials, createEvent, deleteEvent, getAccessToken} = require('./calendar.js') 
 
 let auth;
 
@@ -114,9 +114,21 @@ async function DeleteEvent(content, messageObj) {
     }
 }
 
+async function handleTokenKey(tokenKey, messageObj) {
+    if (auth) {
+        return "Already Authenticated"
+    }
+    try {
+        return await getAccessToken(tokenKey)
+    } catch(e) {
+        return e
+    }
+}
+
 module.exports = {
     ListEvents,
     CreateEvent,
     handleCreateEvent,
-    DeleteEvent
+    DeleteEvent,
+    handleTokenKey
 }
